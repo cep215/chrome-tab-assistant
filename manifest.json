@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "CCAT Solver",
+  "version": "1.0.0",
+  "description": "Capture visible tab and solve via backend API",
+  "permissions": ["activeTab", "scripting", "offscreen"],
+  "commands": {
+    "capture-solve": {
+      "suggested_key": { "default": "Ctrl+Shift+Y", "mac": "Command+Shift+Y" },
+      "description": "Capture screenshot and solve"
+    }
+  },
+  "background": {
+    "service_worker": "sw.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
