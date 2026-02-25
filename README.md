@@ -1,4 +1,4 @@
-# CCAT Solver
+# AI Powered Chrome Tab Assistant
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
@@ -34,7 +34,7 @@ Once the model responds, the overlay displays the answer with a confidence bar a
 ## Project Structure
 
 ```
-CCAT-solver/
+chrome-tab-assistant/
 ├── manifest.json          # MV3 extension manifest (hotkey, permissions, scripts)
 ├── sw.js                  # Service worker — capture → compress → POST → relay
 ├── offscreen.html/js      # Offscreen document for canvas-based JPEG compression
@@ -49,8 +49,8 @@ CCAT-solver/
 ## Quick Start
 
 ```bash
-git clone https://github.com/cep215/CCAT-solver.git
-cd CCAT-solver
+git clone https://github.com/cep215/chrome-tab-assistant.git
+cd chrome-tab-assistant
 ./dev.sh
 ```
 
