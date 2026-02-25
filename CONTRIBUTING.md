@@ -32,7 +32,7 @@ cd backend && ../.venv/bin/python -m pytest test_server.py -v
 | Image compression | `offscreen.js` |
 | Overlay UI / styling | `content.js` |
 | Backend / AI model | `backend/server.py` |
-| Prompt tuning | `SYSTEM_PROMPT` in `backend/server.py` |
+| Prompt tuning | `backend/prompt.txt` |
 | Model selection | `model=` parameter in `backend/server.py` (line 54) |
 
 ## Changing the AI Model

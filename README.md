@@ -91,9 +91,16 @@ This tool is intended for **learning and accessibility** purposes only.
 | Backend URL | `sw.js` line 1 | `http://localhost:8000/screen-solve` |
 | JPEG quality | `sw.js` `compressImage()` | `0.7` (70%) |
 | Max image width | `sw.js` `compressImage()` | `1280` px |
-| AI model | `backend/server.py` line 54 | `gpt-4.1-mini` |
+| AI model | `backend/server.py` line 52 | `gpt-4.1-mini` |
+| System prompt | `backend/prompt.txt` | See file |
 | Request timeout | `sw.js` line 23 | `12000` ms |
 | Overlay auto-hide | `content.js` line 3 | `15000` ms |
+
+### Customizing the Prompt
+
+The system prompt lives in `backend/prompt.txt` — edit it in any text editor, no Python required. The backend reads it on startup, so restart after changes.
+
+The prompt must instruct the model to return valid JSON with `answer`, `confidence`, and `rationale` fields, or the backend will fail to parse the response.
 
 ### Changing the AI Model
 

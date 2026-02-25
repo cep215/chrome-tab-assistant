@@ -26,12 +26,9 @@ async def health():
     key_set = bool(os.getenv("OPENAI_API_KEY"))
     return {"status": "ok", "openai_key_configured": key_set}
 
-SYSTEM_PROMPT = (
-    "You are a visual problem solver. The user sends a screenshot. "
-    "Identify any question, problem, or task visible on screen and provide the answer. "
-    "Respond ONLY with valid JSON: "
-    '{"answer": "<concise answer>", "confidence": <0.0-1.0>, "rationale": "<one sentence explanation>"}'
-)
+_prompt_path = os.path.join(os.path.dirname(__file__), "prompt.txt")
+with open(_prompt_path) as f:
+    SYSTEM_PROMPT = f.read().strip()
 
 
 class SolveRequest(BaseModel):
