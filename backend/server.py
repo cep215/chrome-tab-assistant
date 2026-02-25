@@ -20,6 +20,12 @@ app.add_middleware(
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
+
+@app.get("/health")
+async def health():
+    key_set = bool(os.getenv("OPENAI_API_KEY"))
+    return {"status": "ok", "openai_key_configured": key_set}
+
 SYSTEM_PROMPT = (
     "You are a visual problem solver. The user sends a screenshot. "
     "Identify any question, problem, or task visible on screen and provide the answer. "

@@ -1,6 +1,16 @@
 # CCAT Solver
 
-A Manifest V3 Chrome extension that captures your visible tab with a hotkey, sends the screenshot to an AI vision model, and displays the answer as a sleek overlay — all in under 15 seconds.
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+An AI-powered study companion that explains on-screen questions, walks through the reasoning, and highlights where your thinking went wrong — so you learn the *why*, not just the answer.
+
+Built as a Manifest V3 Chrome extension with a local FastAPI backend.
+
+### Use Cases
+
+- **Study / practice mode** — Review practice tests after attempting them. The overlay explains the correct reasoning and shows where you went wrong, turning repetition into actual learning.
+- **Accessibility** — Reads and structures on-screen content for users who benefit from AI-assisted comprehension of visual material.
+- **MV3 reference implementation** — Clean example of offscreen canvas compression, content-script overlay UI, and a local backend proxy pattern for Chrome extension developers.
 
 ## How It Works
 
@@ -36,39 +46,27 @@ CCAT-solver/
     └── .env.example        # Template for .env
 ```
 
-## Setup
-
-### 1. Backend
+## Quick Start
 
 ```bash
-cd backend
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+git clone https://github.com/cep215/CCAT-solver.git
+cd CCAT-solver
+./dev.sh
 ```
 
-Create `backend/.env` with your OpenAI API key:
+On first run, `dev.sh` creates the venv, installs dependencies, and starts the backend. If `backend/.env` is missing it creates one and reminds you to paste your `OPENAI_API_KEY`.
 
-```
-OPENAI_API_KEY=sk-proj-...
-```
+The script prints the Chrome extension setup steps when it starts. Press **Cmd+Shift+Y** on any page and the overlay appears top-right.
 
-Start the server:
+## Troubleshooting
 
-```bash
-uvicorn server:app --host 0.0.0.0 --port 8000
-```
-
-### 2. Chrome Extension
-
-1. Open `chrome://extensions` in Chrome
-2. Enable **Developer mode** (toggle in the top-right corner)
-3. Click **Load unpacked** and select the `CCAT-solver` folder
-4. Verify the hotkey at `chrome://extensions/shortcuts` — bind **"Capture screenshot and solve"** to `Cmd+Shift+Y`
-
-### 3. Use It
-
-Navigate to any page, press **Cmd+Shift+Y**, and the answer overlay will appear in the top-right corner. Click **x** to dismiss it early, or it auto-hides after 15 seconds.
+| Symptom | Cause | Fix |
+|---|---|---|
+| Hotkey does nothing | Shortcut not registered or conflicts with another extension | Check `chrome://extensions/shortcuts` and rebind |
+| "Solving..." spinner never resolves | Backend not running or offscreen document failed | Verify `curl http://localhost:8000/health` returns `ok` |
+| "Error" overlay: "Request timed out" | Backend took >12s (slow network or model overload) | Check backend logs; try again |
+| "Error" overlay: "Backend returned 500" | Invalid or missing `OPENAI_API_KEY` | Check `backend/.env`; hit `/health` to confirm `openai_key_configured: true` |
+| Extension not visible in Chrome | Not loaded or wrong folder selected | Re-load unpacked; make sure you select the repo root containing `manifest.json` |
 
 ## Permissions
 
@@ -78,6 +76,14 @@ Navigate to any page, press **Cmd+Shift+Y**, and the answer overlay will appear 
 | `scripting` | Inject content script into tabs not matched at load time |
 | `offscreen` | Create an offscreen document for canvas-based image compression |
 
+## Ethical Use
+
+This tool is intended for **learning and accessibility** purposes only.
+
+- **Do not** use on real hiring assessments, proctored exams, or graded tests.
+- **Designed for** practice environments, self-study, and post-attempt review.
+- **You are responsible** for compliance with the rules of any site or platform you use.
+
 ## Configuration
 
 | Option | Location | Default |
@@ -85,6 +91,57 @@ Navigate to any page, press **Cmd+Shift+Y**, and the answer overlay will appear 
 | Backend URL | `sw.js` line 1 | `http://localhost:8000/screen-solve` |
 | JPEG quality | `sw.js` `compressImage()` | `0.7` (70%) |
 | Max image width | `sw.js` `compressImage()` | `1280` px |
-| AI model | `backend/server.py` line 48 | `gpt-4.1-mini` |
+| AI model | `backend/server.py` line 54 | `gpt-4.1-mini` |
 | Request timeout | `sw.js` line 23 | `12000` ms |
 | Overlay auto-hide | `content.js` line 3 | `15000` ms |
+
+### Changing the AI Model
+
+Edit `backend/server.py`, find the `client.chat.completions.create(` call, and change the `model=` parameter:
+
+```python
+model="gpt-4.1-mini",   # fast + cheap (default)
+model="gpt-4.1-nano",   # fastest, lower accuracy
+model="gpt-4o",          # most capable, slower + more expensive
+```
+
+Restart the backend after changing.
+
+## Known Limitations
+
+- **Latency**: Typical end-to-end time is 3-8 seconds (screenshot capture ~100ms, compression ~200ms, API call 2-7s depending on model and image complexity). The 12-second timeout will abort slow requests.
+- **Visible tab only**: Captures what's currently visible in the viewport — content below the fold or behind modals is not included.
+- **Single answer**: The model returns one answer per screenshot. Multi-question pages may get a partial or combined response.
+- **Model accuracy**: AI vision models can misread text, misinterpret diagrams, or hallucinate. Always verify answers against your own understanding.
+- **No offline mode**: Requires a running backend and an active OpenAI API connection.
+- **Chrome only**: Built for Chromium-based browsers (Chrome, Edge, Brave). Firefox and Safari are not supported.
+
+## Privacy
+
+**What is sent:**
+- A compressed JPEG screenshot of your visible tab is sent to your **local backend** (`localhost:8000`), which forwards it to the OpenAI API for processing.
+
+**What is NOT sent:**
+- No browsing history, cookies, form data, passwords, or DOM content is collected or transmitted.
+- The extension has no network permissions beyond what the service worker `fetch` does — it only contacts the backend URL you configure.
+
+**Data retention:**
+- OpenAI's data retention policies apply to the API call. See [OpenAI's API data usage policy](https://openai.com/enterprise-privacy/) for details.
+- The local backend does not store screenshots or responses.
+
+## Roadmap
+
+- [ ] Configurable hotkey from extension popup
+- [ ] Model selection dropdown (switch between GPT-4o, 4.1-mini, 4.1-nano without editing code)
+- [ ] Local OCR fallback (Tesseract.js) for basic text extraction without API calls
+- [ ] Multi-question detection (split and answer each question separately)
+- [ ] Answer history panel (review past solves in a side panel)
+- [ ] Firefox/Safari support via WebExtension polyfill
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup instructions, project layout, and guidelines.
+
+## License
+
+[MIT](LICENSE)
