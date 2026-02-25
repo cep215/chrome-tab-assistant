@@ -18,7 +18,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+def _get_openai_client():
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise RuntimeError("OPENAI_API_KEY environment variable is not set")
+    return OpenAI(api_key=api_key)
+
 
 
 @app.get("/health")
@@ -47,7 +52,7 @@ async def screen_solve(req: SolveRequest):
         raise HTTPException(status_code=400, detail="Invalid image data URL")
 
     try:
-        completion = client.chat.completions.create(
+        completion = _get_openai_client().chat.completions.create(
             model="gpt-4.1-mini",
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},

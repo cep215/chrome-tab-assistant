@@ -46,9 +46,9 @@ def _mock_completion(content: str):
     return completion
 
 
-@patch("server.client")
+@patch("server._get_openai_client")
 def test_solve_returns_answer(mock_openai):
-    mock_openai.chat.completions.create.return_value = _mock_completion(
+    mock_openai.return_value.chat.completions.create.return_value = _mock_completion(
         '{"answer": "15", "confidence": 0.95, "rationale": "Pattern increases by 3"}'
     )
     res = client.post("/screen-solve", json={"image_data_url": FAKE_IMAGE})
@@ -59,9 +59,9 @@ def test_solve_returns_answer(mock_openai):
     assert "3" in body["rationale"]
 
 
-@patch("server.client")
+@patch("server._get_openai_client")
 def test_solve_strips_markdown_fences(mock_openai):
-    mock_openai.chat.completions.create.return_value = _mock_completion(
+    mock_openai.return_value.chat.completions.create.return_value = _mock_completion(
         '```json\n{"answer": "42", "confidence": 0.8, "rationale": "Computed"}\n```'
     )
     res = client.post("/screen-solve", json={"image_data_url": FAKE_IMAGE})
@@ -69,9 +69,9 @@ def test_solve_strips_markdown_fences(mock_openai):
     assert res.json()["answer"] == "42"
 
 
-@patch("server.client")
+@patch("server._get_openai_client")
 def test_solve_clamps_confidence(mock_openai):
-    mock_openai.chat.completions.create.return_value = _mock_completion(
+    mock_openai.return_value.chat.completions.create.return_value = _mock_completion(
         '{"answer": "x", "confidence": 1.5, "rationale": "over"}'
     )
     res = client.post("/screen-solve", json={"image_data_url": FAKE_IMAGE})
@@ -82,9 +82,9 @@ def test_solve_clamps_confidence(mock_openai):
 # ── Error handling ──────────────────────────────────────────────────
 
 
-@patch("server.client")
+@patch("server._get_openai_client")
 def test_solve_returns_502_on_bad_json(mock_openai):
-    mock_openai.chat.completions.create.return_value = _mock_completion(
+    mock_openai.return_value.chat.completions.create.return_value = _mock_completion(
         "This is not JSON at all"
     )
     res = client.post("/screen-solve", json={"image_data_url": FAKE_IMAGE})
@@ -92,9 +92,9 @@ def test_solve_returns_502_on_bad_json(mock_openai):
     assert "invalid JSON" in res.json()["detail"]
 
 
-@patch("server.client")
+@patch("server._get_openai_client")
 def test_solve_returns_500_on_api_error(mock_openai):
-    mock_openai.chat.completions.create.side_effect = RuntimeError("API down")
+    mock_openai.return_value.chat.completions.create.side_effect = RuntimeError("API down")
     res = client.post("/screen-solve", json={"image_data_url": FAKE_IMAGE})
     assert res.status_code == 500
     assert "API down" in res.json()["detail"]
